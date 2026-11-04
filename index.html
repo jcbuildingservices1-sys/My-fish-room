@@ -35,7 +35,19 @@
 .layout-butt{background:linear-gradient(90deg,#182c39,#546e7d,#1b3443)!important;border:3px solid #7d9ca8}
 @media(max-width:480px){.layout-canvas{height:440px!important;border-width:7px!important}.layout-panel{padding:10px!important}.tank-tools{flex-wrap:wrap;bottom:-44px!important}.tank-tools button{font-size:9px!important}}
 </style>
-</head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><h1>🐠 My Fish Room</h1><p>🔒 Enter your password to open the app.</p><input id="fish-lock-password" type="password" placeholder="Password" autocomplete="off" required aria-label="Password"><button type="submit">Unlock Fish Room</button><p class="lock-error" id="fish-lock-error" role="alert"></p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
+<style id="v8-design">
+.layout-grid{display:grid;grid-template-columns:1fr!important}
+.layout-panel{background:#102637!important;border:1px solid #34586b!important}
+.layout-canvas{height:540px!important;max-width:820px;background:radial-gradient(ellipse at 50% 25%,#385568 0%,#172f40 58%,#0a1c29 100%)!important;border:9px solid #304a58!important;box-shadow:inset 0 0 45px #000b,0 10px 24px #0003!important}
+.whole-tank{border:5px ridge #d0e1e7!important;background:linear-gradient(180deg,#c6f5ff45,#397c99b8 24%,#24607ac9 68%,#15475b 69%,#10374a)!important;box-shadow:inset 0 5px 2px #fff7,inset 0 -8px 10px #031e2d8a,4px 6px 12px #000a!important}
+.whole-section{border-right:5px double #cfeaf3!important}
+.whole-section:last-of-type{border-right:0!important}
+.whole-section b{font-size:clamp(17px,4vw,30px)!important}
+.whole-section small{font-size:clamp(9px,2vw,12px)!important}
+.layout-beam{background:linear-gradient(180deg,#c1d2d9,#687e8a 25%,#223846 65%,#a1b5bd)!important;border:2px solid #c0d4de!important;box-shadow:3px 5px 7px #0009!important}
+.whole-tank .tank-tag{top:-21px!important;z-index:9}
+@media(max-width:550px){.layout-canvas{height:490px!important;border-width:7px!important}.layout-panel{padding:10px!important}.whole-section b{font-size:23px!important}}
+</style></head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><h1>🐠 My Fish Room</h1><p>🔒 Enter your password to open the app.</p><input id="fish-lock-password" type="password" placeholder="Password" autocomplete="off" required aria-label="Password"><button type="submit">Unlock Fish Room</button><p class="lock-error" id="fish-lock-error" role="alert"></p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
 const KEY='myfishroom_v1';const today=()=>new Date().toISOString().slice(0,10);
 const seedTanks=[
 [1,'Grow-out','600 × 600 × 600',216,'active','~170 juvenile common and albino bristlenose plecos (20–70 mm); ~13 baby mollies'],
@@ -154,6 +166,7 @@ function wholeGroups(){
   const templates=[
    {id:'p-left-top',wall:'left',ids:[9,10],x:30,y:5,w:40,h:21},
    {id:'p-left-pair',wall:'left',ids:[2,3],x:34,y:38,w:34,h:20},
+   {id:'p-left-bottom',wall:'left',ids:[11,12,13],x:27,y:75,w:46,h:17},
    {id:'p-back-top',wall:'back',ids:[5,6,7,8],x:3,y:14,w:94,h:26},
    {id:'p-back-low',wall:'back',ids:[14],x:3,y:65,w:94,h:24}
   ];
@@ -176,14 +189,15 @@ function wholeGroups(){
  if(!db.layout.v7SceneReady){
    const scene={
     'p-left-top':{wall:'left',x:29,y:5,w:42,h:19},
-    'p-left-pair':{wall:'left',x:34,y:36,w:34,h:18},
+    'p-left-pair':{wall:'left',x:35,y:35,w:34,h:20},
+    'p-left-bottom':{wall:'left',x:27,y:76,w:46,h:17},
     'p-back-top':{wall:'back',x:4,y:16,w:92,h:24},
     'p-back-low':{wall:'back',x:4,y:66,w:92,h:24}
    };
    for(const g of db.layout.wholeGroups){if(scene[g.id])Object.assign(g,scene[g.id]);}
    Object.assign(db.layout.placements,{
-    1:{wall:'left',x:2,y:28,w:29,h:37},
-    4:{wall:'left',x:70,y:36,w:28,h:18},
+    1:{wall:'left',x:2,y:32,w:30,h:39},
+    4:{wall:'left',x:72,y:35,w:26,h:20},
     11:{wall:'left',x:24,y:76,w:16,h:18},
     12:{wall:'left',x:42,y:76,w:16,h:18},
     13:{wall:'left',x:60,y:76,w:16,h:18}
@@ -192,6 +206,27 @@ function wholeGroups(){
    const eight=db.tanks.find(t=>t.id===8);
    if(eight){const d=tankDims(eight);if(!d||d[0]<150){eight.dimensions='300 × 300 × 300';eight.litres=27;}}
    db.layout.v7SceneReady=true;
+   save();
+ }
+ if(!db.layout.v8SceneReady){
+   const ids=[11,12,13],groups=db.layout.wholeGroups;
+   db.layout.wholeGroups=groups.filter(g=>!g.ids.some(id=>ids.includes(id))&&g.id!=='p-left-bottom');
+   db.layout.wholeGroups.push({id:'p-left-bottom',wall:'left',ids:[11,12,13],x:27,y:76,w:46,h:17});
+   for(const g of db.layout.wholeGroups){
+     const placements={
+      'p-left-top':{wall:'left',x:29,y:5,w:42,h:19},
+      'p-left-pair':{wall:'left',x:35,y:35,w:34,h:20},
+      'p-back-top':{wall:'back',x:4,y:16,w:92,h:24},
+      'p-back-low':{wall:'back',x:4,y:66,w:92,h:24}
+     };
+     if(placements[g.id])Object.assign(g,placements[g.id]);
+   }
+   db.layout.placements[1]={wall:'left',x:2,y:32,w:30,h:39};
+   db.layout.placements[4]={wall:'left',x:72,y:35,w:26,h:20};
+   // Tank 8 must remain a full section, not a zero-width divider.
+   const t8=db.tanks.find(t=>t.id===8),dims=t8&&tankDims(t8);
+   if(t8&&(!dims||dims[0]<150)){t8.dimensions='300 × 300 × 300';t8.litres=27;}
+   db.layout.v8SceneReady=true;
    save();
  }
  // A tank can only appear in one physical aquarium.
@@ -207,9 +242,9 @@ layoutWallHTML=function(w){let groups=wholeGroups();let racks=db.layout.racks.fi
  // Layout positions are persisted. Never silently reposition tanks while rendering.
  // Widths are calibrated per shelf to the real front widths; heights to real heights.
  let tanks=candidates.map(g=>{let sum=Math.max(1,g.ids.reduce((a,id)=>a+layoutSectionSize(g,id),0));let sections=g.ids.map((id,i)=>{let t=db.tanks.find(t=>t.id===id);let pct=layoutSectionSize(g,id)/sum*100;return `<div class="whole-section" style="flex:0 0 ${pct}%;--section-color:${layoutColor(t)}" onclick="if(!layoutEditing&&!layoutSuppressClick){go('tanks');openTank(${id})}" title="Tank ${id}: ${esc(t.name)}"><b>${id}</b><small>${t.litres??'?'} L</small>${layoutEditing&&i<g.ids.length-1?`<span class="divider-grip" data-divider="${i}" title="Drag divider to resize sections">⋮</span>`:''}</div>`}).join('');return `<div class="whole-tank ${layoutEditing?'editing':''}" data-whole="${g.id}" style="left:${g.x}%;top:${g.y}%;width:${g.w}%;height:${g.h}%"><span class="tank-tag">${g.ids.length>1?'Aquarium · '+g.ids.length+' sections':'Tank '+g.ids[0]}</span>${sections}${layoutEditing?`<span class="corner-grip" title="Drag to resize tank">↘</span><div class="tank-tools"><button type="button" onclick="event.stopPropagation();duplicateWholeV4('${g.id}')">Duplicate</button><button type="button" onclick="event.stopPropagation();moveWholeWallV4('${g.id}')">Wall</button><button type="button" onclick="event.stopPropagation();addDividerV4('${g.id}')">+ Divider</button></div>`:''}</div>`}).join('');return `<div class="panel layout-panel"><h3>${w[0].toUpperCase()+w.slice(1)} wall</h3><div class="layout-canvas ${layoutEditing?'editing':''}" data-wall="${w}" onpointerdown="wholePointerDown(event)">${racks}${tanks}${w==='right'&&db.layout.rightWaterButt?'<div class="layout-butt">💧<small>Water butt</small></div>':''}</div></div>`};
-renderLayout=function(){ensureLayout();wholeGroups();return `<div class="panel"><h2>🐠 Fish room — 2D layout <small style="font-size:12px;color:#b9d6e5">v7 · Original-style room</small></h2><p class="hint">Separate physical aquariums, with dividers inside only where needed. Tap a numbered section for its records.</p><div class="actions">${['all',...layoutWalls].map(w=>btn(w==='all'?'All walls':w[0].toUpperCase()+w.slice(1)+' wall',`setLayoutWall('${w}')`,layoutWall===w?'action':'secondary')).join('')}</div><div class="actions">${btn(layoutEditing?'✓ Finish arranging':'✥ Arrange / resize','toggleLayoutEdit()',layoutEditing?'action':'secondary')}</div>${layoutEditing?`<p class="hint">Drag tanks and racking. Drag yellow corners to resize. Drag the ⋮ divider handles to change section widths. Use Wall to move a tank to another wall, Duplicate for a fresh empty copy, + Divider to create a new empty numbered section, and × to remove racking.</p><div class="actions">${btn('↺ Reset layout positions','resetV7Positions()')}${btn('+ Tank','addWholeTank()','action')}${btn('+ Rack beam / leg','addRack()')}${btn('Edit tank sections','editWholeSections()')}</div>`:''}</div><div class="layout-grid">${(layoutWall==='all'?layoutWalls:[layoutWall]).map(layoutWallHTML).join('')}</div>`};
+renderLayout=function(){ensureLayout();wholeGroups();return `<div class="panel"><h2>🐠 Fish room — 2D layout <small style="font-size:12px;color:#b9d6e5">v8 · Full room layout</small></h2><p class="hint">Separate physical aquariums, with dividers inside only where needed. Tap a numbered section for its records.</p><div class="actions">${['all',...layoutWalls].map(w=>btn(w==='all'?'All walls':w[0].toUpperCase()+w.slice(1)+' wall',`setLayoutWall('${w}')`,layoutWall===w?'action':'secondary')).join('')}</div><div class="actions">${btn(layoutEditing?'✓ Finish arranging':'✥ Arrange / resize','toggleLayoutEdit()',layoutEditing?'action':'secondary')}</div>${layoutEditing?`<p class="hint">Drag tanks and racking. Drag yellow corners to resize. Drag the ⋮ divider handles to change section widths. Use Wall to move a tank to another wall, Duplicate for a fresh empty copy, + Divider to create a new empty numbered section, and × to remove racking.</p><div class="actions">${btn('↺ Reset layout positions','resetV7Positions()')}${btn('+ Tank','addWholeTank()','action')}${btn('+ Rack beam / leg','addRack()')}${btn('Edit tank sections','editWholeSections()')}</div>`:''}</div><div class="layout-grid">${(layoutWall==='all'?layoutWalls:[layoutWall]).map(layoutWallHTML).join('')}</div>`};
 
-function resetV7Positions(){if(!confirm('Reset only the tank positions and rack positions to the original-style arrangement? Fish records, dimensions and maintenance remain unchanged.'))return;db.layout.v7SceneReady=false;db.layout.v6LayoutRepaired=true;wholeGroups();render();toast('Room positions reset; records kept.')}
+function resetV7Positions(){if(!confirm('Reset only the tank positions and rack positions to the original-style arrangement? Fish records, dimensions and maintenance remain unchanged.'))return;db.layout.v7SceneReady=false;db.layout.v8SceneReady=false;db.layout.v6LayoutRepaired=true;wholeGroups();render();toast('Room positions reset; records kept.')}
 function v4Group(id){return wholeGroups().find(g=>g.id===id)||(()=>{if(!id.startsWith('single-'))return null;let t=db.tanks.find(t=>t.id===Number(id.slice(7)));if(!t)return null;let a=positionFor(t);let g={id:'whole-'+Date.now(),wall:a.wall,ids:[t.id],x:a.x,y:a.y,w:a.w,h:a.h||21};db.layout.wholeGroups.push(g);return g})()}
 function v4EmptyClone(t,id){return {...t,id,name:'Empty',status:'empty',notes:'',saleCounts:{},litres:t.litres??null}}
 function duplicateWholeV4(id){let g=v4Group(id);if(!g)return;let ids=g.ids.map(old=>{let src=db.tanks.find(t=>t.id===old),next=Math.max(0,...db.tanks.map(t=>t.id))+1;db.tanks.push(v4EmptyClone(src,next));return next});db.layout.wholeGroups.push({...g,id:'whole-'+Date.now(),ids,x:Math.min(85,g.x+5),y:Math.min(80,g.y+g.h+4)});save();render();toast('Duplicated as empty tank(s) '+ids.join(', '))}
