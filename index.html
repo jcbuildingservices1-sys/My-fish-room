@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#eaf6fb"><title>My Fish Room — Proportional Tanks v5</title><style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#eaf6fb"><title>My Fish Room — Corrected Aquariums v6</title><style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e7f4fb;background:#071a2a}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#082f49,#071a2a 55%);min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.shell{max-width:950px;margin:auto;padding:20px 15px 100px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 18px}h1{font-size:26px;margin:0}h2{font-size:19px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}.sub,.muted{color:#9fb9cb}.sub{font-size:13px}.pill{display:inline-block;border:1px solid #36758d;color:#bdeaff;border-radius:99px;padding:5px 9px;font-size:12px}.nav{display:flex;gap:7px;overflow-x:auto;margin:15px 0 20px;padding-bottom:6px}.nav button{background:#12334a;color:#bdd9e9;border:1px solid #28516a;border-radius:12px;padding:10px 14px;white-space:nowrap}.nav button.active{background:#19a7b7;color:#032331;font-weight:750}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}.panel,.tank{background:#102d40;border:1px solid #25506a;border-radius:16px;padding:15px;box-shadow:0 8px 25px #0002}.tank{display:block;text-align:left;color:inherit;width:100%}.tank:active{transform:scale(.99)}.tankhead{display:flex;justify-content:space-between;align-items:center}.tank .num{font-size:20px;font-weight:750}.tank p{font-size:14px;line-height:1.45;margin:9px 0}.tag{font-size:11px;padding:5px 8px;border-radius:999px;background:#1b4b5a;color:#b6f4e8}.tag.warn{background:#5d431d;color:#ffe0a7}.tag.off{background:#394755;color:#c7d4df}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 15px}.metric{background:#114159;border-radius:12px;padding:13px}.metric b{display:block;font-size:23px}.metric span{font-size:12px;color:#bdd0dd}label{display:block;font-weight:650;font-size:13px;margin:12px 0 5px}input,select,textarea{width:100%;border-radius:10px;background:#082438;border:1px solid #356077;color:#f2faff;padding:12px;outline-color:#29bbc5}textarea{min-height:75px}.action{background:#19a7b7;color:#022b37;padding:11px 15px;border-radius:11px;font-weight:750}.secondary{background:#244d65;color:#e8f7ff;padding:11px 14px;border-radius:11px}.danger{background:#6a3440;color:#ffe4e6;padding:11px 14px;border-radius:11px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.row{display:flex;align-items:center;gap:10px;justify-content:space-between}.small{font-size:12px}.listrow{padding:12px 0;border-bottom:1px solid #2b4b60}.listrow:last-child{border:0}.hidden{display:none!important}.back{background:none;color:#9de6ed;padding:6px 0}.hint{font-size:13px;color:#a9becd;line-height:1.5}.notice{border-left:3px solid #40c6be;background:#154253;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;margin:12px 0}.warning{border-left-color:#f7bd69}.two{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(max-width:470px){.metrics{grid-template-columns:repeat(3,1fr)}.metric{padding:10px}.metric b{font-size:19px}.two{grid-template-columns:1fr}header h1{font-size:23px}}.floatmic{position:fixed;right:19px;bottom:20px;border-radius:50%;background:#35ced0;color:#062736;width:60px;height:60px;font-size:25px;box-shadow:0 5px 25px #0008}.floatmic.on{background:#ffbb69}.toast{position:fixed;bottom:92px;left:15px;right:15px;max-width:520px;margin:auto;background:#ecfbff;color:#053243;padding:14px;border-radius:12px;box-shadow:0 8px 35px #0008;z-index:9}.empty{color:#a6bdcb;padding:15px 4px}a{color:#80ebec}
 
 /* Clear, simplified phone-friendly layout */
@@ -129,53 +129,63 @@ function interpret(s){let m=s.match(/tank\s*(\d+)/i),n=m?+m[1]:null;if(!n||!db.t
 document.getElementById('mic').onclick=voice;render();save();
 
 // Whole physical tanks: sections retain their own original record IDs and histories.
-function wholeGroups(){ensureLayout();if(!Array.isArray(db.layout.wholeGroups))db.layout.wholeGroups=[];
- // v5 migration: correct physical aquariums, retain all livestock and maintenance records.
- if(!db.layout.v5Migrated){
-   const old=db.layout.wholeGroups;
-   const fixed=[
-    {id:'p-left-top',wall:'left',ids:[9,10],x:30,y:7,w:40,h:20},
-    {id:'p-left-pair',wall:'left',ids:[2,3],x:32,y:37,w:35,h:20},
-    {id:'p-back-top',wall:'back',ids:[5,6,7,8],x:3,y:13,w:94,h:25},
-    {id:'p-back-low',wall:'back',ids:[14],x:3,y:60,w:94,h:26}
-   ];
-   for(const g of fixed){const prev=old.find(x=>x.id===g.id);if(prev){g.wall=prev.wall;g.x=prev.x;g.y=prev.y}}
-   const grouped=new Set(fixed.flatMap(g=>g.ids));
-   db.layout.wholeGroups=[...old.filter(g=>!g.ids.some(id=>grouped.has(id))&&g.id!=='p-left-mid'&&g.id!=='p-left-low'),...fixed];
-   // Tank 8 belongs to the 1200 mm divided aquarium; infer only when unrecorded.
-   const eight=db.tanks.find(t=>t.id===8);
-   if(eight&&!tankDims(eight)){eight.dimensions='300 × 300 × 300';eight.litres=27}
-   const positions={
-    1:{wall:'left',x:2,y:34,w:29,h:40},
-    4:{wall:'left',x:69,y:37,w:29,h:20},
-    11:{wall:'left',x:15,y:77,w:23,h:20},
-    12:{wall:'left',x:39,y:77,w:23,h:20},
-    13:{wall:'left',x:63,y:77,w:23,h:20}
-   };
-   for(const [id,p] of Object.entries(positions))db.layout.placements[id]={...p};
-   db.layout.v5Migrated=true;save();
+function wholeGroups(){
+ ensureLayout();
+ if(!Array.isArray(db.layout.wholeGroups))db.layout.wholeGroups=[];
+ if(!db.layout.v6LayoutRepaired){
+  // Rebuild the physical grouping regardless of previous migration flags.
+  // Keep unrelated/custom groups, tank records and maintenance histories intact.
+  const old=db.layout.wholeGroups;
+  const templates=[
+   {id:'p-left-top',wall:'left',ids:[9,10],x:30,y:5,w:40,h:21},
+   {id:'p-left-pair',wall:'left',ids:[2,3],x:34,y:38,w:34,h:20},
+   {id:'p-back-top',wall:'back',ids:[5,6,7,8],x:3,y:14,w:94,h:26},
+   {id:'p-back-low',wall:'back',ids:[14],x:3,y:65,w:94,h:24}
+  ];
+  const ids=new Set(templates.flatMap(g=>g.ids));
+  const keep=old.filter(g=>!g.ids.some(id=>ids.has(id))&&g.id!=='p-left-mid'&&g.id!=='p-left-low');
+  db.layout.wholeGroups=[...keep,...templates];
+  const placements={1:{wall:'left',x:3,y:29,w:30,h:39},4:{wall:'left',x:70,y:38,w:28,h:20},11:{wall:'left',x:17,y:77,w:22,h:19},12:{wall:'left',x:40,y:77,w:22,h:19},13:{wall:'left',x:63,y:77,w:22,h:19}};
+  for(const [id,pos] of Object.entries(placements))db.layout.placements[id]=pos;
+  // A previous divider drag could save a near-zero length for section 8.
+  const eight=db.tanks.find(t=>t.id===8),d=eight&&tankDims(eight);
+  if(eight&&(!d||d[0]<150)){
+   const reference=tankDims(db.tanks.find(t=>t.id===7)||{})||[300,300,300];
+   eight.dimensions=reference.join(' × ');
+   eight.litres=Math.round(reference[0]*reference[1]*reference[2]/1000000*10)/10;
+  }
+  db.layout.v6LayoutRepaired=true;
+  db.layout.proportionManual=false;
+  save();
  }
- db.layout.wholeGroups.forEach(g=>{g.ids=g.ids.filter(id=>db.tanks.some(t=>t.id===id))});
+ // A tank can only appear in one physical aquarium.
+ const seen=new Set();
+ db.layout.wholeGroups=db.layout.wholeGroups.filter(g=>{g.ids=g.ids.filter(id=>db.tanks.some(t=>t.id===id)&&!seen.has(id));g.ids.forEach(id=>seen.add(id));return g.ids.length>0});
  return db.layout.wholeGroups;
 }
 function wholeFor(id){return wholeGroups().find(g=>g.ids.includes(Number(id)))}
-function layoutSectionSize(g,id){let t=db.tanks.find(t=>t.id===id),d=t&&tankDims(t);return d?.[0]>0?d[0]:1}
+function layoutSectionSize(g,id){let t=db.tanks.find(t=>t.id===id),d=t&&tankDims(t);return d?.[0]>0?d[0]:300}
 function wholeDimensions(g){let dims=g.ids.map(id=>tankDims(db.tanks.find(t=>t.id===id)||{})).filter(Boolean);return dims.length?`${Math.round(dims.reduce((a,d)=>a+d[0],0))} × ${Math.round(dims[0][1])} × ${Math.round(dims[0][2])} mm`:''}
 layoutWallHTML=function(w){let groups=wholeGroups();let racks=db.layout.racks.filter(r=>r.wall===w).map(r=>`<div class="layout-beam ${r.kind==='vertical'?'vertical':''}" style="left:${r.x}%;top:${r.y}%;${r.kind==='vertical'?'height:'+r.length+'%;width:9px':'width:'+r.length+'%;height:9px'}" data-rack="${r.id}">${layoutEditing?`<span class="rack-grip" title="Resize rack">↘</span><button class="rack-delete" type="button" onclick="event.stopPropagation();deleteRackV4(${r.id})" title="Delete racking">×</button>`:''}</div>`).join('');
  let used=new Set(groups.flatMap(g=>g.ids));let extras=db.tanks.filter(t=>!used.has(t.id)).map(t=>{let a=positionFor(t);return {id:'single-'+t.id,wall:a.wall,ids:[t.id],x:a.x,y:a.y,w:a.w,h:a.h||21,extra:true}});let candidates=[...groups,...extras].filter(g=>g.wall===w&&g.ids.length);
- // Keep visual widths proportional to the sum of recorded section lengths for the default layout.
- if(!db.layout.proportionManual){
-   const rows=w==='left'?[{ids:[1,2,3,4],start:2,end:98},{ids:[9,10],start:30,end:70},{ids:[11,12,13],start:15,end:86}]:w==='back'?[{ids:[5,6,7,8],start:3,end:97}]:[];
-   for(const row of rows){
-     const found=candidates.filter(g=>g.ids.some(id=>row.ids.includes(id)));
-     const length=g=>g.ids.reduce((a,id)=>a+(tankDims(db.tanks.find(t=>t.id===id)||{})?.[0]||300),0);
-     const total=found.reduce((a,g)=>a+length(g),0);
-     if(!total)continue;
-     let x=row.start;for(const g of found){g.x=x;g.w=(row.end-row.start)*length(g)/total;x+=g.w}
-   }
+ // Use recorded front-face dimensions, not litres alone: depth is invisible in 2D.
+ // Arrange rows to scale, reserving a separate physical aquarium for 2+3.
+ const rows=w==='left'?[{ids:[1,2,3,4],start:3,end:97},{ids:[9,10],start:30,end:70},{ids:[11,12,13],start:17,end:85}]:w==='back'?[{ids:[5,6,7,8],start:3,end:97}]:[];
+ for(const row of rows){
+  const found=candidates.filter(g=>g.ids.some(id=>row.ids.includes(id)));
+  const length=g=>g.ids.reduce((sum,id)=>sum+(tankDims(db.tanks.find(t=>t.id===id)||{})?.[0]||300),0);
+  const total=found.reduce((sum,g)=>sum+length(g),0);
+  if(!total)continue;
+  let x=row.start;
+  for(const g of found){
+   if(!g.userSized){g.x=x;g.w=(row.end-row.start)*length(g)/total;}
+   x+=(row.end-row.start)*length(g)/total;
+   const h=tankDims(db.tanks.find(t=>t.id===g.ids[0])||{})?.[2]||300;
+   if(!g.userSized&&w==='left'&&row.ids[0]===1)g.h=Math.min(42,Math.max(18,20*h/300));
+  }
  }
  let tanks=candidates.map(g=>{let sum=Math.max(1,g.ids.reduce((a,id)=>a+layoutSectionSize(g,id),0));let sections=g.ids.map((id,i)=>{let t=db.tanks.find(t=>t.id===id);let pct=layoutSectionSize(g,id)/sum*100;return `<div class="whole-section" style="flex:0 0 ${pct}%;--section-color:${layoutColor(t)}" onclick="if(!layoutEditing&&!layoutSuppressClick){go('tanks');openTank(${id})}" title="Tank ${id}: ${esc(t.name)}"><b>${id}</b><small>${t.litres??'?'} L</small>${layoutEditing&&i<g.ids.length-1?`<span class="divider-grip" data-divider="${i}" title="Drag divider to resize sections">⋮</span>`:''}</div>`}).join('');return `<div class="whole-tank ${layoutEditing?'editing':''}" data-whole="${g.id}" style="left:${g.x}%;top:${g.y}%;width:${g.w}%;height:${g.h}%"><span class="tank-tag">${g.ids.length>1?'Aquarium · '+g.ids.length+' sections':'Tank '+g.ids[0]}</span>${sections}${layoutEditing?`<span class="corner-grip" title="Drag to resize tank">↘</span><div class="tank-tools"><button type="button" onclick="event.stopPropagation();duplicateWholeV4('${g.id}')">Duplicate</button><button type="button" onclick="event.stopPropagation();moveWholeWallV4('${g.id}')">Wall</button><button type="button" onclick="event.stopPropagation();addDividerV4('${g.id}')">+ Divider</button></div>`:''}</div>`}).join('');return `<div class="panel layout-panel"><h3>${w[0].toUpperCase()+w.slice(1)} wall</h3><div class="layout-canvas ${layoutEditing?'editing':''}" data-wall="${w}" onpointerdown="wholePointerDown(event)">${racks}${tanks}${w==='right'&&db.layout.rightWaterButt?'<div class="layout-butt">💧<small>Water butt</small></div>':''}</div></div>`};
-renderLayout=function(){ensureLayout();wholeGroups();return `<div class="panel"><h2>🐠 Fish room — 2D layout <small style="font-size:12px;color:#b9d6e5">v5 · Proportional tanks</small></h2><p class="hint">Separate physical aquariums, with dividers inside only where needed. Tap a numbered section for its records.</p><div class="actions">${['all',...layoutWalls].map(w=>btn(w==='all'?'All walls':w[0].toUpperCase()+w.slice(1)+' wall',`setLayoutWall('${w}')`,layoutWall===w?'action':'secondary')).join('')}</div><div class="actions">${btn(layoutEditing?'✓ Finish arranging':'✥ Arrange / resize','toggleLayoutEdit()',layoutEditing?'action':'secondary')}</div>${layoutEditing?`<p class="hint">Drag tanks and racking. Drag yellow corners to resize. Drag the ⋮ divider handles to change section widths. Use Wall to move a tank to another wall, Duplicate for a fresh empty copy, + Divider to create a new empty numbered section, and × to remove racking.</p><div class="actions">${btn('+ Tank','addWholeTank()','action')}${btn('+ Rack beam / leg','addRack()')}${btn('Edit tank sections','editWholeSections()')}</div>`:''}</div><div class="layout-grid">${(layoutWall==='all'?layoutWalls:[layoutWall]).map(layoutWallHTML).join('')}</div>`};
+renderLayout=function(){ensureLayout();wholeGroups();return `<div class="panel"><h2>🐠 Fish room — 2D layout <small style="font-size:12px;color:#b9d6e5">v6 · Corrected aquariums</small></h2><p class="hint">Separate physical aquariums, with dividers inside only where needed. Tap a numbered section for its records.</p><div class="actions">${['all',...layoutWalls].map(w=>btn(w==='all'?'All walls':w[0].toUpperCase()+w.slice(1)+' wall',`setLayoutWall('${w}')`,layoutWall===w?'action':'secondary')).join('')}</div><div class="actions">${btn(layoutEditing?'✓ Finish arranging':'✥ Arrange / resize','toggleLayoutEdit()',layoutEditing?'action':'secondary')}</div>${layoutEditing?`<p class="hint">Drag tanks and racking. Drag yellow corners to resize. Drag the ⋮ divider handles to change section widths. Use Wall to move a tank to another wall, Duplicate for a fresh empty copy, + Divider to create a new empty numbered section, and × to remove racking.</p><div class="actions">${btn('+ Tank','addWholeTank()','action')}${btn('+ Rack beam / leg','addRack()')}${btn('Edit tank sections','editWholeSections()')}</div>`:''}</div><div class="layout-grid">${(layoutWall==='all'?layoutWalls:[layoutWall]).map(layoutWallHTML).join('')}</div>`};
 function v4Group(id){return wholeGroups().find(g=>g.id===id)||(()=>{if(!id.startsWith('single-'))return null;let t=db.tanks.find(t=>t.id===Number(id.slice(7)));if(!t)return null;let a=positionFor(t);let g={id:'whole-'+Date.now(),wall:a.wall,ids:[t.id],x:a.x,y:a.y,w:a.w,h:a.h||21};db.layout.wholeGroups.push(g);return g})()}
 function v4EmptyClone(t,id){return {...t,id,name:'Empty',status:'empty',notes:'',saleCounts:{},litres:t.litres??null}}
 function duplicateWholeV4(id){let g=v4Group(id);if(!g)return;let ids=g.ids.map(old=>{let src=db.tanks.find(t=>t.id===old),next=Math.max(0,...db.tanks.map(t=>t.id))+1;db.tanks.push(v4EmptyClone(src,next));return next});db.layout.wholeGroups.push({...g,id:'whole-'+Date.now(),ids,x:Math.min(85,g.x+5),y:Math.min(80,g.y+g.h+4)});save();render();toast('Duplicated as empty tank(s) '+ids.join(', '))}
@@ -190,7 +200,7 @@ function wholePointerDown(e){if(!layoutEditing)return;let el=e.target.closest('[
 function wholePointerMove(e){let d=wholeDrag;if(!d||d.el!==e.currentTarget)return;let r=d.canvas.getBoundingClientRect(),dx=(e.clientX-d.startX)*100/r.width,dy=(e.clientY-d.startY)*100/r.height;if(d.divider!==undefined){d.moved=true;let sections=d.el.querySelectorAll('.whole-section');let total=d.group.ids.reduce((sum,id)=>sum+layoutSectionSize(d.group,id),0);let change=(e.clientX-d.startX)/d.el.getBoundingClientRect().width*total;let a=Math.max(1,d.ad[0]+change),b=Math.max(1,d.bd[0]-change);let p=(a+b);sections[d.divider].style.flex='0 0 '+(a/total*100)+'%';sections[d.divider+1].style.flex='0 0 '+(b/total*100)+'%';return}d.moved=d.moved||Math.abs(dx)+Math.abs(dy)>1;if(d.resize){if(d.isRack){let v=Math.max(4,Math.min(100-(d.rack.kind==='horizontal'?d.x:d.y),d.rack.length+(d.rack.kind==='horizontal'?dx:dy)));if(d.rack.kind==='horizontal')d.el.style.width=v+'%';else d.el.style.height=v+'%'}else{d.el.style.width=Math.max(8,Math.min(100-d.x,d.w+dx))+'%';d.el.style.height=Math.max(9,Math.min(100-d.y,d.h+dy))+'%'}}else{d.el.style.left=Math.max(0,Math.min(95,d.x+dx))+'%';d.el.style.top=Math.max(0,Math.min(95,d.y+dy))+'%'}}
 function wholePointerCancel(e){wholePointerCleanup(e.currentTarget);render()}
 function wholePointerCleanup(el){el.removeEventListener('pointermove',wholePointerMove);el.removeEventListener('pointerup',wholePointerUp);el.removeEventListener('pointercancel',wholePointerCancel);wholeDrag=null}
-function wholePointerUp(e){let d=wholeDrag;if(!d||d.el!==e.currentTarget)return;if(d.divider!==undefined){let total=d.ad[0]+d.bd[0],change=(e.clientX-d.startX)/d.el.getBoundingClientRect().width*d.group.ids.reduce((sum,id)=>sum+layoutSectionSize(d.group,id),0);let a=Math.max(1,Math.min(total-1,Math.round(d.ad[0]+change))),b=total-a;for(let [i,width,dims] of [[d.divider,a,d.ad],[d.divider+1,b,d.bd]]){let t=db.tanks.find(t=>t.id===d.group.ids[i]);t.dimensions=`${width} × ${dims[1]} × ${dims[2]}`;t.litres=Math.round(width*dims[1]*dims[2]/1000000*10)/10}wholePointerCleanup(e.currentTarget);save();render();return}let newW=parseFloat(d.el.style.width)||d.w,newH=parseFloat(d.el.style.height)||d.h;let x=parseFloat(d.el.style.left)||0,y=parseFloat(d.el.style.top)||0;let target=Array.from(document.querySelectorAll('.layout-canvas')).find(el=>{let r=el.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom});if(!d.moved){wholePointerCleanup(e.currentTarget);return}if(d.resize){if(d.isRack)d.rack.length=d.rack.kind==='horizontal'?newW:newH;else{let ids=d.group?.ids||[d.extra.id];let missing=ids.filter(id=>!tankDims(db.tanks.find(t=>t.id===id)));if(missing.length){toast('Enter real dimensions on Tanks page for section(s) '+missing.join(', ')+' before resizing.');wholePointerCleanup(e.currentTarget);render();return}let sx=newW/d.w,sy=newH/d.h;for(let id of ids){let t=db.tanks.find(t=>t.id===id),dims=tankDims(t);let length=Math.max(1,Math.round(dims[0]*sx)),height=Math.max(1,Math.round(dims[2]*sy));t.dimensions=`${length} × ${dims[1]} × ${height}`;t.litres=Math.round(length*dims[1]*height/1000000*10)/10;}d.obj.w=newW;d.obj.h=newH;db.layout.proportionManual=true;if(d.extra)db.layout.placements[d.extra.id]={...d.obj};}}
+function wholePointerUp(e){let d=wholeDrag;if(!d||d.el!==e.currentTarget)return;if(d.divider!==undefined){let total=d.ad[0]+d.bd[0],change=(e.clientX-d.startX)/d.el.getBoundingClientRect().width*d.group.ids.reduce((sum,id)=>sum+layoutSectionSize(d.group,id),0);let a=Math.max(1,Math.min(total-1,Math.round(d.ad[0]+change))),b=total-a;for(let [i,width,dims] of [[d.divider,a,d.ad],[d.divider+1,b,d.bd]]){let t=db.tanks.find(t=>t.id===d.group.ids[i]);t.dimensions=`${width} × ${dims[1]} × ${dims[2]}`;t.litres=Math.round(width*dims[1]*dims[2]/1000000*10)/10}wholePointerCleanup(e.currentTarget);save();render();return}let newW=parseFloat(d.el.style.width)||d.w,newH=parseFloat(d.el.style.height)||d.h;let x=parseFloat(d.el.style.left)||0,y=parseFloat(d.el.style.top)||0;let target=Array.from(document.querySelectorAll('.layout-canvas')).find(el=>{let r=el.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom});if(!d.moved){wholePointerCleanup(e.currentTarget);return}if(d.resize){if(d.isRack)d.rack.length=d.rack.kind==='horizontal'?newW:newH;else{let ids=d.group?.ids||[d.extra.id];let missing=ids.filter(id=>!tankDims(db.tanks.find(t=>t.id===id)));if(missing.length){toast('Enter real dimensions on Tanks page for section(s) '+missing.join(', ')+' before resizing.');wholePointerCleanup(e.currentTarget);render();return}let sx=newW/d.w,sy=newH/d.h;for(let id of ids){let t=db.tanks.find(t=>t.id===id),dims=tankDims(t);let length=Math.max(1,Math.round(dims[0]*sx)),height=Math.max(1,Math.round(dims[2]*sy));t.dimensions=`${length} × ${dims[1]} × ${height}`;t.litres=Math.round(length*dims[1]*height/1000000*10)/10;}d.obj.w=newW;d.obj.h=newH;d.obj.userSized=true;if(d.extra)db.layout.placements[d.extra.id]={...d.obj};}}
  else{if(target&&target!==d.canvas){let r=target.getBoundingClientRect();x=Math.max(0,Math.min(95,(e.clientX-r.left)*100/r.width-d.w/2));y=Math.max(0,Math.min(95,(e.clientY-r.top)*100/r.height-d.h/2));d.obj.wall=target.dataset.wall}d.obj.x=x;d.obj.y=y;if(d.extra)db.layout.placements[d.extra.id]={...d.obj}}wholePointerCleanup(e.currentTarget);save();layoutSuppressClick=true;setTimeout(()=>layoutSuppressClick=false,200);render()}
 // Tank page dimension edits update the physical whole tank's graphic in proportion.
 const _saveTankOriginal=saveTank;
