@@ -53,10 +53,11 @@ serve(async (req) => {
       headers: { apikey: serviceKey, Authorization: "Bearer " + serviceKey },
       cache: "no-store",
     });
-    if (!result.ok) return response(502, { error: "Unable to load trade stock" });
+    if (!result.ok) { const detail = (await result.text()).slice(0, 700); console.error("trade-stock upstream REST error", result.status, detail); return response(502, { error: "Unable to load trade stock" }); }
     const rows = await result.json();
     return response(200, { stock: rows });
-  } catch {
+  } catch (error) {
+    console.error("trade-stock upstream connection error", String(error));
     return response(502, { error: "Unable to load trade stock" });
   }
 });
