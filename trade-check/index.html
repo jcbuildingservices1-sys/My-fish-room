@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M&L Aquatics | Trade Stock</title><style>:root{font-family:system-ui;color:#e8f7ff;background:#091a29}*{box-sizing:border-box}body{margin:0;background:linear-gradient(#0b3754,#081725);min-height:100vh}.wrap{max-width:760px;margin:auto;padding:24px 15px}h1{font-size:25px}p{color:#a9c8db}.card{padding:20px;border:1px solid #2e617d;background:#102c40;border-radius:18px;margin:15px 0}label{display:block;margin:14px 0 5px}input{display:block;width:100%;padding:13px;background:#071b2b;color:white;border:1px solid #43768f;border-radius:10px}button{padding:12px 17px;background:#087cbd;color:white;border:0;border-radius:10px;font-weight:700;cursor:pointer}.row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #31546a;padding:13px 0;gap:10px}.muted{color:#9ec4d9;font-size:12px}.hidden{display:none}.error{color:#ff9b9b}</style></head><body><main class="wrap"><h1>🐠 M&L Aquatics</h1><p>Private trade stock — only stock marked available by the supplier is displayed.</p><div class="card" id="login"><h2>Secure sign-in</h2><p>Enter the private trade password supplied to you in person. No email or registration required.</p><label>Trade password</label><input id="password" type="password" autocomplete="off" placeholder="Enter trade password"><p><button id="signin">View available fish</button></p><p class="error" id="error"></p></div><div class="card hidden" id="stock"><div class="row"><h2>Available fish</h2><button id="logout">Sign out</button></div><div id="items">Loading…</div><p class="muted">Read-only. Contact the supplier to place an order.</p></div></main><script>
+const $=id=>document.getElementById(id);
+const ENDPOINT='https://mndkcjupllqevtlaeyyr.supabase.co/functions/v1/trade-stock';
+function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('signin').onclick=async()=>{
+ const password=$('password').value;
+ if(!password){$('error').textContent='Enter the password';return}
+ $('error').textContent='';
+ $('signin').disabled=true;$('signin').textContent='Checking…';
+ try{
+ const response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password}),cache:'no-store'});
+ const data=await response.json();
+ if(!response.ok)throw Error(data.error||'Unable to sign in');
+ const rows=Array.isArray(data.stock)?data.stock:[];
+ $('items').innerHTML=rows.length?rows.map(x=>'<div class="row"><div><strong>'+esc(x.species)+'</strong><div class="muted">'+Number(x.quantity)+' available</div></div><strong>£'+Number(x.trade_price).toFixed(2)+'</strong></div>').join(''):'No fish currently listed as ready for sale.';
+ $('password').value='';
+ $('login').classList.add('hidden');$('stock').classList.remove('hidden');
+ }catch(e){$('error').textContent=e instanceof TypeError ? 'Connection to Supabase failed. Please check the link and internet connection.' : e.message}
+ finally{$('signin').disabled=false;$('signin').textContent='View available fish'}
+};
+$('logout').onclick=()=>{$('stock').classList.add('hidden');$('login').classList.remove('hidden');$('items').textContent=''};
+</script></body></html>
