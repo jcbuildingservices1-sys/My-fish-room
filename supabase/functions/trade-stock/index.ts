@@ -28,7 +28,7 @@ serve(async req=>{
  if(!body||typeof body!=="object")return response(400,{error:"Invalid request"});
  const action=typeof body.action==="string"?body.action:"view";
  try{
-  if(action==="admin-list"||action==="admin-password"||action==="admin-publish"){
+  if(action==="admin-list"||action==="admin-password"||action==="admin-rename"||action==="admin-publish"){
    if(!(await authOwner(req)))return response(401,{error:"Sign in to your Fish Room cloud account"});
    const shop=validateShop(body.shop);
    if(action==="admin-list"){
@@ -36,6 +36,12 @@ serve(async req=>{
     return response(200,{shops:shops.map((s:any)=>({id:s.shop_id,name:s.shop_name,passwordSet:!!s.password_hash||(s.shop_id==="ml"&&!!oldPassword),items:offers.filter((x:any)=>x.shop_id===s.shop_id).map((x:any)=>({species:x.species,quantity:x.quantity,trade_price:Number(x.trade_price)}))}))});
    }
    if(!shop)return response(400,{error:"Unknown shop"});
+   if(action==="admin-rename"){
+    const name=body.name;
+    if(typeof name!=="string"||name.trim().length<2||name.trim().length>60)return response(400,{error:"Enter a shop name between 2 and 60 characters"});
+    await rest("fishroom_trade_shops?"+ownerFilter+"&shop_id=eq."+shop,{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({shop_name:name.trim(),updated_at:new Date().toISOString()})});
+    return response(200,{ok:true,name:name.trim()});
+   }
    if(action==="admin-password"){
     const password=body.password;
     if(typeof password!=="string"||password.length<10||password.length>128)return response(400,{error:"Use a password of at least 10 characters"});
