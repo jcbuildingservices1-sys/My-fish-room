@@ -153,7 +153,20 @@ button.action{background:#067fb7!important;color:#fff!important}
 body.ios-dashboard .nav{display:none!important}
 /* Make the approved navigation easier to use on subpages without replacing content */
 .nav button{transition:background .12s,border-color .12s}
-</style><style id="fish-photo-history">.photo-upload{display:inline-block;padding:10px 14px;border-radius:10px;cursor:pointer;margin:8px 0}.photo-history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.photo-history-item{display:flex;flex-direction:column;gap:5px;padding:8px;background:#0b2436;border-radius:12px}.photo-history-item img{width:100%;height:110px;object-fit:cover;border-radius:8px}.photo-history-item small{color:#bed9e9}</style></head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><h1>🐠 My Fish Room</h1><p>🔒 Enter your password to open the app.</p><input id="fish-lock-password" type="password" placeholder="Password" autocomplete="off" required aria-label="Password"><button type="submit">Unlock Fish Room</button><p class="lock-error" id="fish-lock-error" role="alert"></p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
+</style><style id="fish-photo-history">.photo-upload{display:inline-block;padding:10px 14px;border-radius:10px;cursor:pointer;margin:8px 0}.photo-history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.photo-history-item{display:flex;flex-direction:column;gap:5px;padding:8px;background:#0b2436;border-radius:12px}.photo-history-item img{width:100%;height:110px;object-fit:cover;border-radius:8px}.photo-history-item small{color:#bed9e9}</style><style id="trade-shop-owner-style">
+#trade-shop-manager{display:grid;gap:15px}.trade-shop{padding:17px!important}
+.trade-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}.trade-heading h2{margin:0}
+.trade-inline{display:flex;align-items:center;gap:8px;margin:8px 0 13px}
+.trade-inline input{flex:1;min-width:0}.trade-inline button{flex-shrink:0}
+.trade-row{display:grid;grid-template-columns:minmax(0,1fr) 68px 78px;align-items:center;gap:7px;border-bottom:1px solid #2b4e66;padding:10px 0}
+.trade-row.trade-header{font-size:11px;font-weight:700;color:#a8c8d9}
+.trade-fish{display:flex;align-items:center;gap:8px;font-size:13px!important;font-weight:700!important;margin:0!important;min-width:0}
+.trade-fish input{flex:0 0 20px;width:20px!important;padding:0!important;accent-color:#06a7e0}
+.trade-fish span{min-width:0;overflow-wrap:anywhere}.trade-fish small{display:block;color:#9ebdd0;font-size:10px;font-weight:400;line-height:1.4}
+.trade-row>input{width:100%;min-width:0;padding:8px 4px!important;text-align:center;font-size:13px}
+.trade-publish{width:100%;margin:12px 0}
+@media(max-width:390px){.trade-row{grid-template-columns:minmax(0,1fr) 55px 67px;gap:5px}.trade-row>input{font-size:12px}.trade-inline{flex-wrap:wrap}.trade-inline input{flex:1 1 100%}}
+</style></head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><h1>🐠 My Fish Room</h1><p>🔒 Enter your password to open the app.</p><input id="fish-lock-password" type="password" placeholder="Password" autocomplete="off" required aria-label="Password"><button type="submit">Unlock Fish Room</button><p class="lock-error" id="fish-lock-error" role="alert"></p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
 const KEY='myfishroom_v1';const today=()=>new Date().toISOString().slice(0,10);
 const seedTanks=[
 [1,'Grow-out','600 × 600 × 600',216,'active','~170 juvenile common and albino bristlenose plecos (20–70 mm); ~13 baby mollies'],
@@ -309,6 +322,41 @@ function drawTradeShops(){
    <p id="trade-status-${id}" class="hint" role="status">${(shop.items||[]).length} species currently published</p>
   </section>`;
  }).join('');
+}
+
+
+function tradeMessage(id,message){const el=document.getElementById('trade-status-'+id);if(el)el.textContent=message}
+function copyTradeShopLink(id){
+ const link=tradeLinkFor(id);
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(link).then(()=>toast('Link copied for '+tradeShopName(id)),()=>window.prompt('Copy shop link',link));
+ else window.prompt('Copy shop link',link);
+}
+async function renameTradeShop(id){
+ const input=document.getElementById('trade-name-'+id);const name=(input?.value||'').trim();
+ if(name.length<2||name.length>60){tradeMessage(id,'Shop name must be 2–60 characters');return}
+ try{await tradeShopCall('admin-rename',{shop:id,name});await loadTradeShops();toast('Shop name saved')}
+ catch(e){tradeMessage(id,e.message)}
+}
+async function changeTradeShopPassword(id){
+ const input=document.getElementById('trade-password-'+id),password=input?.value||'';
+ if(password.length<10){tradeMessage(id,'Password must be at least 10 characters');return}
+ if(!confirm('Change password for this shop? Their old password will stop working.'))return;
+ try{await tradeShopCall('admin-password',{shop:id,password});input.value='';await loadTradeShops();toast('Password changed')}
+ catch(e){tradeMessage(id,e.message)}
+}
+async function publishForTradeShop(id){
+ const section=document.querySelector('.trade-shop[data-shop="'+id+'"]');if(!section)return;
+ const items=[];
+ for(const row of section.querySelectorAll('.trade-row:not(.trade-header)')){
+  const checked=row.querySelector('.trade-ready');if(!checked.checked)continue;
+  const species=checked.dataset.species,quantity=Number(row.querySelector('.trade-qty').value),trade_price=Number(row.querySelector('.trade-price').value);
+  if(!Number.isSafeInteger(quantity)||quantity<1||!Number.isFinite(trade_price)||trade_price<0){tradeMessage(id,'Enter a valid quantity and price for '+species);return}
+  items.push({species,quantity,trade_price});
+ }
+ const name=tradeShopCache?.find(x=>x.id===id)?.name||tradeShopName(id);
+ if(!confirm('Publish '+items.length+' species for '+name+'? Only their shop list changes.'))return;
+ try{await tradeShopCall('admin-publish',{shop:id,items});await loadTradeShops();toast('Published stock for '+name)}
+ catch(e){tradeMessage(id,e.message)}
 }
 
 function render(){document.body.classList.toggle('ios-dashboard',tab==='dashboard');document.getElementById('tank-total').textContent=db.tanks.length+' tanks';document.getElementById('nav').innerHTML=[['dashboard','🌊 Dashboard'],['tanks','🏠 Tanks'],['stock','💷 Stock Value'],['ready','🐟 Ready to sell'],['sales','🧾 Sales & Costs'],['breeding','🥚 Breeding'],['tests','🧪 Water tests'],['maintenance','🧽 Maintenance'],['layout','🗺️ 2D Layout'],['commands','🎙️ Commands'],['settings','⚙️ Settings']].map(([k,n])=>`<button class="${tab===k?'active':''}" onclick="go('${k}')">${n}</button>`).join('');const v=document.getElementById('view');v.innerHTML=selected!==null&&tab==='tanks'?tankDetail():({dashboard:renderDashboard,tanks:renderTanks,stock:renderStock,ready:renderReadyStock,sales:renderSales,breeding:renderBreeding,tests:renderTests,maintenance:renderMaintenance,layout:renderLayout,commands:renderCommands,settings:renderSettings}[tab]());if(tab==='ready')loadTradeShops();}
