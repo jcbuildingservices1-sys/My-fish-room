@@ -253,6 +253,64 @@ async function publishTradeStock(){
  }catch(e){alert('Trade stock not published. Check that the Supabase trade-stock setup has been completed. '+e.message)}
 }
 function renderReadyStock(){ensureBusinessData();return '<div class="overview-head"><h2>🐠 Trade shop stock</h2><p class="hint">M&L Aquatics, Shop 1 and Shop 2 each have separate stock, prices, quantities, passwords and links. The shop-facing pages remain generic.</p></div><div id="trade-shop-manager"><div class="panel">Loading shop controls…</div></div>';}
+
+const tradeShopIds=['ml','shop1','shop2'];
+let tradeShopCache=null;
+const tradeLinkFor=id=>'https://jcbuildingservices1-sys.github.io/My-fish-room/trade/'+(id==='ml'?'':'?shop='+id);
+async function tradeShopCall(action,fields={}){
+ if(!cloudSession||!cloudConfig)throw Error('Sign in to Cloud Saving under Settings');
+ await cloudToken();
+ const response=await fetch(cloudConfig.url.replace(/\/$/,'')+'/functions/v1/trade-stock',{
+  method:'POST',cache:'no-store',
+  headers:{'Content-Type':'application/json',apikey:cloudConfig.key,Authorization:'Bearer '+cloudSession.access_token},
+  body:JSON.stringify({action,...fields})
+ });
+ const raw=await response.text();let data={};try{data=raw?JSON.parse(raw):{}}catch{}
+ if(!response.ok)throw Error(data.error||'Unable to load shops ('+response.status+')');
+ return data;
+}
+function tradeShopName(id){return id==='ml'?'M&L Aquatics':id==='shop1'?'Shop 1':'Shop 2'}
+async function loadTradeShops(){
+ const root=document.getElementById('trade-shop-manager');if(!root)return;
+ if(!cloudSession||!cloudConfig){
+  root.innerHTML='<div class="panel"><p>To manage shop stock, sign in to your existing Cloud Saving account in Settings.</p><button class="action" onclick="go(\'settings\')">Open Settings</button></div>';return;
+ }
+ root.innerHTML='<div class="panel"><p class="hint">Loading the three shops…</p></div>';
+ try{
+  const result=await tradeShopCall('admin-list');tradeShopCache=result.shops||[];
+  if(document.getElementById('trade-shop-manager'))drawTradeShops();
+ }catch(e){if(document.getElementById('trade-shop-manager'))root.innerHTML='<div class="panel"><p class="hint">'+esc(e.message)+'</p><button class="secondary" onclick="loadTradeShops()">Retry</button></div>';}
+}
+function drawTradeShops(){
+ const root=document.getElementById('trade-shop-manager');if(!root||!tradeShopCache)return;
+ root.innerHTML=tradeShopIds.map(id=>{
+  const shop=tradeShopCache.find(x=>x.id===id)||{id,name:tradeShopName(id),passwordSet:false,items:[]};
+  const map=new Map((shop.items||[]).map(x=>[x.species,x]));
+  const species=[...new Set([...db.stockItems.map(x=>x.name),...(shop.items||[]).map(x=>x.species)])];
+  const rows=species.map(name=>{
+   const current=map.get(name),inRoom=saleCount(name),otherReserved=tradeShopCache.reduce((sum,x)=>sum+(x.id===id?0:Number((x.items||[]).find(y=>y.species===name)?.quantity||0)),0);
+   const defaultPrice=Number(db.stockItems.find(x=>x.name===name)?.price||0);
+   return `<div class="trade-row">
+    <label class="trade-fish"><input type="checkbox" class="trade-ready" data-species="${esc(name)}" ${current?'checked':''}><span>${esc(name)}<small>In room: ${inRoom} · Unallocated: ${Math.max(0,inRoom-otherReserved)}</small></span></label>
+    <input class="trade-qty" type="number" min="0" step="1" inputmode="numeric" value="${Number(current?.quantity||0)}" aria-label="Quantity ${esc(name)}">
+    <input class="trade-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(current?.trade_price??defaultPrice).toFixed(2)}" aria-label="Price ${esc(name)}">
+   </div>`;
+  }).join('');
+  return `<section class="panel trade-shop" data-shop="${id}">
+   <div class="trade-heading"><h2>${esc(shop.name)}</h2><span class="pill">${id==='ml'?'M&L':'Shop '+id.slice(-1)}</span></div>
+   <label>Shop name</label><div class="trade-inline"><input id="trade-name-${id}" value="${esc(shop.name)}" maxlength="60"><button class="secondary" onclick="renameTradeShop('${id}')">Rename</button></div>
+   <div class="trade-inline"><button class="action" onclick="copyTradeShopLink('${id}')">🔗 Copy link</button><span class="hint">Shop-specific private link</span></div>
+   <label>${shop.passwordSet?'Change shop password':'Set shop password'}</label><div class="trade-inline"><input id="trade-password-${id}" type="password" autocomplete="new-password" maxlength="128" placeholder="10+ characters"><button class="secondary" onclick="changeTradeShopPassword('${id}')">Save password</button></div>
+   <p class="hint">${shop.passwordSet?'Password is configured':'No password set — configure before sharing'}</p>
+   <h3>Fish, quantities and trade prices</h3>
+   <div class="trade-row trade-header"><span>Ready / Fish</span><span>Qty</span><span>£ each</span></div>${rows}
+   <p class="hint">Only ticked fish with quantities are shared. Quantities cannot exceed your recorded fish after allocations to other shops.</p>
+   <button class="action trade-publish" onclick="publishForTradeShop('${id}')">Publish for ${esc(shop.name)}</button>
+   <p id="trade-status-${id}" class="hint" role="status">${(shop.items||[]).length} species currently published</p>
+  </section>`;
+ }).join('');
+}
+
 function render(){document.body.classList.toggle('ios-dashboard',tab==='dashboard');document.getElementById('tank-total').textContent=db.tanks.length+' tanks';document.getElementById('nav').innerHTML=[['dashboard','🌊 Dashboard'],['tanks','🏠 Tanks'],['stock','💷 Stock Value'],['ready','🐟 Ready to sell'],['sales','🧾 Sales & Costs'],['breeding','🥚 Breeding'],['tests','🧪 Water tests'],['maintenance','🧽 Maintenance'],['layout','🗺️ 2D Layout'],['commands','🎙️ Commands'],['settings','⚙️ Settings']].map(([k,n])=>`<button class="${tab===k?'active':''}" onclick="go('${k}')">${n}</button>`).join('');const v=document.getElementById('view');v.innerHTML=selected!==null&&tab==='tanks'?tankDetail():({dashboard:renderDashboard,tanks:renderTanks,stock:renderStock,ready:renderReadyStock,sales:renderSales,breeding:renderBreeding,tests:renderTests,maintenance:renderMaintenance,layout:renderLayout,commands:renderCommands,settings:renderSettings}[tab]());if(tab==='ready')loadTradeShops();}
 function go(t){tab=t;selected=null;render()};function openTank(id){selected=id;render()}
 function saleCount(name){return db.tanks.reduce((sum,t)=>sum+(Number(t.saleCounts?.[name])||0),0)}
