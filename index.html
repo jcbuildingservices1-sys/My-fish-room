@@ -399,7 +399,7 @@ async function publishTradeStock(){
  toast('Trade stock published securely: '+rows.length+' species');
  }catch(e){alert('Trade stock not published. Check that the Supabase trade-stock setup has been completed. '+e.message)}
 }
-function renderReadyStock(){ensureBusinessData();return '<div class="overview-head"><h2>🐠 Trade shop stock</h2><p class="hint">M&L Aquatics, Shop 1 and Shop 2 each have separate stock, sizes, prices, quantities, passwords and links. Fish sizes appear only here, not in Stock Value or tank stock.</p></div><div id="trade-shop-manager"><div class="panel">Loading shop controls…</div></div>';}
+function renderReadyStock(){ensureBusinessData();return '<div class="overview-head"><h2>🐠 Trade shop stock</h2><p class="hint">M&L Aquatics, Shop 1 and Shop 2 each have separate stock, sizes, prices, quantities, passwords and links. Fish sizes appear only here, not in Stock Value or tank stock. Angelfish size prices are suggested starting rates, not verified local shop offers; any saved shop prices take priority.</p></div><div id="trade-shop-manager"><div class="panel">Loading shop controls…</div></div>';}
 
 const tradeShopIds=['ml','shop1','shop2'];
 let tradeShopCache=null;
@@ -436,7 +436,9 @@ function drawTradeShops(){
   const species=[...new Set([...currentSpecies().flatMap(x=>[x.name,...(readySizeBands[x.name]||[]).map(size=>x.name+' — '+size)]),...(shop.items||[]).map(x=>x.species)])];
   const rows=species.map(name=>{
    const current=map.get(name),base=baseSpeciesName(name),inRoom=groupedCount(base),otherReserved=tradeShopCache.reduce((sum,x)=>sum+(x.id===id?0:(x.items||[]).reduce((a,y)=>a+(baseSpeciesName(y.species)===base?Number(y.quantity)||0:0),0)),0);
-   const defaultPrice=Number(db.stockItems.find(x=>x.name===name)?.price??db.stockItems.find(x=>x.name===base)?.price??0);
+   const angelSize=base==='Angelfish'&&name.startsWith('Angelfish — ')?name.slice('Angelfish — '.length):null;
+   const suggestedAngelPrice=angelSize?angelTradePriceDefaults[angelSize]:undefined;
+   const defaultPrice=Number(suggestedAngelPrice??db.stockItems.find(x=>x.name===name)?.price??db.stockItems.find(x=>x.name===base)?.price??0);
    return `<div class="trade-row">
     <label class="trade-fish"><input type="checkbox" class="trade-ready" data-species="${esc(name)}" ${current?'checked':''}><span>${esc(name)}<small>${base!==name?'Size-specific · ':''}In room total: ${inRoom} · Unallocated: ${Math.max(0,inRoom-otherReserved)}</small></span></label>
     <input class="trade-qty" type="number" min="0" step="1" inputmode="numeric" value="${Number(current?.quantity||0)}" aria-label="Quantity ${esc(name)}">
@@ -504,6 +506,14 @@ function go(t){tab=t;selected=null;render()};function openTank(id){selected=id;r
 
 // Size-specific saleable items are separate inventory SKUs. Never migrate or erase
 // an existing ungraded species count: the owner can grade fish as they grow.
+const angelTradePriceDefaults={
+ '2–3 cm':1.25,
+ '3–4 cm':2.00,
+ '4–5 cm':2.50,
+ '5–6 cm':4.00,
+ '6–8 cm':5.25,
+ '8+ cm':7.50
+};
 const readySizeBands={
  'Angelfish':['2–3 cm','3–4 cm','4–5 cm','5–6 cm','6–8 cm','8+ cm'],
  'Common Bristlenose':['2–3 cm','3–4 cm','4–5 cm','5–6 cm','6+ cm'],
