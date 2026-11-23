@@ -616,7 +616,7 @@ function deleteRecord(label,i){let key={Breeding:'breeding',Test:'tests',Mainten
    Each entry has a stable ID so moving between tanks does not erase its history. */
 function ensureBreedingStock(){if(!Array.isArray(db.breedingStock))db.breedingStock=[]}
 function breederSpeciesOptions(current){
- const names=[...new Set([...db.stockItems.map(x=>x.name),...db.breedingStock.map(x=>x.species),current].filter(Boolean))];
+ const names=[...new Set([...db.stockItems.filter(x=>!x.baseSpecies).map(x=>x.name),'Guppies','Mollies',...db.breedingStock.map(x=>x.species),current].filter(Boolean))];
  return names.map(x=>'<option value="'+esc(x)+'" '+(x===current?'selected':'')+'>'+esc(x)+'</option>').join('');
 }
 function renderBreederCard(b){
@@ -629,9 +629,29 @@ function renderBreederCard(b){
  '<label>Pair / group notes</label><textarea id="bs-notes-'+b.id+'" placeholder="Identification, spawning behaviour, etc.">'+esc(b.notes||'')+'</textarea>'+
  '<div class="actions">'+btn('Save breeding stock',`saveBreeder('${b.id}')`,'action')+btn('Delete',`deleteBreeder('${b.id}')`,'danger')+'</div></div>';
 }
-function renderBreedingStock(){ensureBreedingStock();return '<div class="overview-head"><h2>🐠 Breeding Pairs & Adults</h2><p class="hint">Keep established pairs and breeding adults separate from saleable fish. Move them between tanks without losing their records. Existing breeding history stays under Breeding History.</p><div class="actions">'+btn('+ Add breeding stock','addBreeder()','action')+'</div></div>'+(db.breedingStock.map(renderBreederCard).join('')||'<div class="panel">No breeding groups added yet. Your existing tank names and breeding history have not been changed.</div>');}
-function renderTankBreeders(tankId){ensureBreedingStock();const groups=db.breedingStock.filter(x=>Number(x.tank)===Number(tankId));return '<div class="panel" style="margin-top:12px"><div class="row"><h3>② Breeding pairs — males & females</h3>'+btn('+ Add pair / group',`addBreeder(${tankId})`,'action')+'</div><p class="hint">Enter breeding adults here by species, males and females, and pairing status. These are not counted as saleable or unsaleable stock.</p>'+(groups.map(renderBreederCard).join('')||'<p class="empty">No breeding stock recorded for this tank yet.</p>')+'</div>';}
-function addBreeder(tankId){ensureBreedingStock();const species=prompt('Which species are you adding to breeding stock?','');if(!species||!species.trim())return;const tank=Number(tankId)||db.tanks.find(t=>t.status==='active')?.id||db.tanks[0]?.id;if(!tank)return;db.breedingStock.push({id:'breeder-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),tank,species:species.trim(),males:1,females:1,status:'unknown',notes:''});save();render();toast('Breeding stock added — set male/female numbers and pair status, then save.')}
+function renderBreedingStock(){ensureBreedingStock();return '<div class="overview-head"><h2>🐠 Breeding Pairs & Adults</h2><p class="hint">Keep established pairs and breeding adults separate from saleable fish. Move them between tanks without losing their records. Existing breeding history stays under Breeding History.</p><div class="actions">'+breederAddControls(0)+'</div></div>'+(db.breedingStock.map(renderBreederCard).join('')||'<div class="panel">No breeding groups added yet. Your existing tank names and breeding history have not been changed.</div>');}
+function renderTankBreeders(tankId){ensureBreedingStock();const groups=db.breedingStock.filter(x=>Number(x.tank)===Number(tankId));return '<div class="panel" style="margin-top:12px"><div class="row"><h3>② Breeding pairs — males & females</h3>'+'</div><p class="hint">Each species has its own male/female counts. You can add several different species to this tank, even females without males.</p>'+breederAddControls(tankId)+(groups.map(renderBreederCard).join('')||'<p class="empty">No breeding stock recorded for this tank yet.</p>')+'</div>';}
+function breederAddControls(tankId){
+ const suffix=Number(tankId)||'all';
+ const tankChoices=db.tanks.filter(t=>t.status!=='planned').map(t=>'<option value="'+t.id+'" '+(Number(tankId)===t.id?'selected':'')+'>Tank '+t.id+' — '+esc(t.name)+'</option>').join('');
+ return '<div style="width:100%;padding:12px;border:1px solid #b5dde4;border-radius:12px;background:#f5fafc"><h4 style="margin:0 0 9px">Add another species</h4><label>Species</label><select id="new-bs-species-'+suffix+'">'+breederSpeciesOptions('')+'<option value="__other__">+ Other species…</option></select>'+
+ (tankId?'':'<label>Tank</label><select id="new-bs-tank-'+suffix+'">'+tankChoices+'</select>')+
+ '<div class="two"><div><label>Males</label><input type="number" min="0" step="1" inputmode="numeric" value="0" id="new-bs-males-'+suffix+'"></div><div><label>Females</label><input type="number" min="0" step="1" inputmode="numeric" value="1" id="new-bs-females-'+suffix+'"></div></div>'+
+ '<div class="actions">'+btn('+ Add breeding species',`addBreeder(${Number(tankId)||0})`,'action')+'</div></div>';
+}
+function addBreeder(tankId){
+ ensureBreedingStock();
+ const suffix=Number(tankId)||'all',field=id=>document.getElementById('new-bs-'+id+'-'+suffix);
+ let species=field('species')?.value||'';
+ if(species==='__other__'){const custom=prompt('Enter species name');if(custom===null)return;species=custom.trim();}
+ const tank=Number(tankId)||Number(field('tank')?.value)||db.tanks.find(t=>t.status==='active')?.id;
+ const males=Number(field('males')?.value),females=Number(field('females')?.value);
+ if(!species||!db.tanks.some(t=>t.id===tank)||!Number.isSafeInteger(males)||males<0||!Number.isSafeInteger(females)||females<0||males+females<1){toast('Select a species and enter at least one fish');return}
+ const existing=db.breedingStock.find(b=>Number(b.tank)===tank&&b.species.toLowerCase()===species.toLowerCase());
+ if(existing){if(!confirm(species+' already has an entry in Tank '+tank+'. Add another separate group?'))return}
+ db.breedingStock.push({id:'breeder-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),tank,species,males,females,status:'unknown',notes:''});
+ save();render();toast(species+' breeding stock added to Tank '+tank);
+}
 function saveBreeder(id){ensureBreedingStock();const b=db.breedingStock.find(x=>x.id===id);if(!b)return;const el=x=>document.getElementById('bs-'+x+'-'+id);const species=el('species')?.value.trim(),tank=Number(el('tank')?.value),males=Number(el('male')?.value),females=Number(el('female')?.value);if(!species||!db.tanks.some(t=>t.id===tank)||!Number.isInteger(males)||males<0||!Number.isInteger(females)||females<0){toast('Choose a species, valid tank and whole-number fish counts');return}b.species=species;b.tank=tank;b.males=males;b.females=females;b.status=el('status').value;b.notes=el('notes').value;save();render();toast('Breeding stock saved');}
 function deleteBreeder(id){ensureBreedingStock();const b=db.breedingStock.find(x=>x.id===id);if(!b||!confirm('Delete this breeding-stock entry? Existing breeding-history records will not be deleted.'))return;db.breedingStock=db.breedingStock.filter(x=>x.id!==id);save();render();}
 
