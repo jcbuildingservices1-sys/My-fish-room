@@ -609,7 +609,7 @@ function tankCardBreeders(id){
  const items=(Array.isArray(db.breedingStock)?db.breedingStock:[]).filter(b=>Number(b.tank)===Number(id));
  return items.length?items.map(b=>{
   const m=Math.max(0,Number(b.males)||0),f=Math.max(0,Number(b.females)||0);
-  return esc(b.species||'Unknown species')+' ('+m+' ♂, '+f+' ♀)';
+  return esc(b.species||'Unknown species')+' ('+m+' male'+(m===1?'':'s')+', '+f+' female'+(f===1?'':'s')+')';
  }).join(' · '):'<span class="muted">None recorded</span>';
 }
 function renderTanks(){let active=db.tanks.filter(t=>t.status==='active').length,planned=db.tanks.filter(t=>t.status==='planned').length;let tiles=db.tanks.map(t=>`<button class="tank" onclick="openTank(${t.id})"><div class="tankhead"><span class="num">Tank ${t.id}</span><span class="tag ${t.status==='planned'?'off':t.status==='empty'?'warn':''}">${t.status==='planned'?'Planned':t.status==='empty'?'Empty':'In use'}</span></div><h3>${esc(t.name)}</h3><div class="sub">${esc(t.litres?t.litres+' litres':'Size not entered')}</div><div class="tank-water fish-tank-art ${t.status==='active'?'':t.status==='empty'?'empty-water':'planned-water'}">${t.status==='active'?fishArtForTank(t):''}</div><div style="padding:10px 12px 14px;text-align:left;font-size:12px;line-height:1.5;border-top:1px solid #e4edf0">
