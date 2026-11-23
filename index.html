@@ -433,12 +433,12 @@ function drawTradeShops(){
  root.innerHTML=tradeShopIds.map(id=>{
   const shop=tradeShopCache.find(x=>x.id===id)||{id,name:tradeShopName(id),passwordSet:false,items:[]};
   const map=new Map((shop.items||[]).map(x=>[x.species,x]));
-  const species=[...new Set([...db.stockItems.map(x=>x.name),...(shop.items||[]).map(x=>x.species)])];
+  const species=[...new Set([...currentSpecies().flatMap(x=>[x.name,...(readySizeBands[x.name]||[]).map(size=>x.name+' — '+size)]),...(shop.items||[]).map(x=>x.species)])];
   const rows=species.map(name=>{
-   const current=map.get(name),inRoom=saleCount(name),otherReserved=tradeShopCache.reduce((sum,x)=>sum+(x.id===id?0:Number((x.items||[]).find(y=>y.species===name)?.quantity||0)),0);
-   const defaultPrice=Number(db.stockItems.find(x=>x.name===name)?.price||0);
+   const current=map.get(name),base=baseSpeciesName(name),inRoom=groupedCount(base),otherReserved=tradeShopCache.reduce((sum,x)=>sum+(x.id===id?0:(x.items||[]).reduce((a,y)=>a+(baseSpeciesName(y.species)===base?Number(y.quantity)||0:0),0)),0);
+   const defaultPrice=Number(db.stockItems.find(x=>x.name===name)?.price??db.stockItems.find(x=>x.name===base)?.price??0);
    return `<div class="trade-row">
-    <label class="trade-fish"><input type="checkbox" class="trade-ready" data-species="${esc(name)}" ${current?'checked':''}><span>${esc(name)}<small>In room: ${inRoom} · Unallocated: ${Math.max(0,inRoom-otherReserved)}</small></span></label>
+    <label class="trade-fish"><input type="checkbox" class="trade-ready" data-species="${esc(name)}" ${current?'checked':''}><span>${esc(name)}<small>${base!==name?'Size-specific · ':''}In room total: ${inRoom} · Unallocated: ${Math.max(0,inRoom-otherReserved)}</small></span></label>
     <input class="trade-qty" type="number" min="0" step="1" inputmode="numeric" value="${Number(current?.quantity||0)}" aria-label="Quantity ${esc(name)}">
     <input class="trade-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(current?.trade_price??defaultPrice).toFixed(2)}" aria-label="Price ${esc(name)}">
    </div>`;
@@ -451,7 +451,7 @@ function drawTradeShops(){
    <p class="hint">${shop.passwordSet?'Password is configured':'No password set — configure before sharing'}</p>
    <h3>Fish, quantities and trade prices</h3>
    <div class="trade-row trade-header"><span>Ready / Fish</span><span>Qty</span><span>£ each</span></div>${rows}
-   <p class="hint">Only ticked fish with quantities are shared. Quantities cannot exceed your recorded fish after allocations to other shops.</p>
+   <p class="hint">Only ticked fish with quantities are shared. Size groups are listed separately here, but combined quantities cannot exceed each species total across shops.</p>
    <button class="action trade-publish" onclick="publishForTradeShop('${id}')">Publish for ${esc(shop.name)}</button>
    <p id="trade-status-${id}" class="hint" role="status">${(shop.items||[]).length} species currently published</p>
   </section>`;
@@ -486,6 +486,12 @@ async function publishForTradeShop(id){
   const species=checked.dataset.species,quantity=Number(row.querySelector('.trade-qty').value),trade_price=Number(row.querySelector('.trade-price').value);
   if(!Number.isSafeInteger(quantity)||quantity<1||!Number.isFinite(trade_price)||trade_price<0){tradeMessage(id,'Enter a valid quantity and price for '+species);return}
   items.push({species,quantity,trade_price});
+ }
+ const totals={};
+ for(const item of items){const base=baseSpeciesName(item.species);totals[base]=(totals[base]||0)+item.quantity;}
+ for(const [base,quantity] of Object.entries(totals)){
+  const otherReserved=(tradeShopCache||[]).reduce((sum,shop)=>sum+(shop.id===id?0:(shop.items||[]).reduce((a,x)=>a+(baseSpeciesName(x.species)===base?Number(x.quantity)||0:0),0)),0);
+  if(quantity+otherReserved>groupedCount(base)){tradeMessage(id,'Too many '+base+' allocated. In room: '+groupedCount(base)+'; already allocated elsewhere: '+otherReserved);return;}
  }
  const name=tradeShopCache?.find(x=>x.id===id)?.name||tradeShopName(id);
  if(!confirm('Publish '+items.length+' species for '+name+'? Only their shop list changes.'))return;
