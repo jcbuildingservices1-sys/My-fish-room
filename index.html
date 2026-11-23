@@ -888,7 +888,21 @@ async function cloudPush(){if(!cloudSession||!cloudEnabled||cloudConflict)return
 function queueCloudSave(){try{localStorage.setItem(cloudDirtyKey,'yes')}catch{}if(!cloudEnabled||!cloudSession||cloudConflict)return;cloudStatus='Saving…';clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudPush(),900)}
 async function cloudLoad(){if(!cloudSession){toast('Sign in first');return}try{let rows=await cloudRows();if(!rows.length){toast('No cloud data yet');return}if(!confirm('Replace the local records with your cloud backup? A local safety snapshot will be kept.'))return;cloudRestore(rows[0]);toast('Cloud records restored; automatic saving ON')}catch(e){alert(e.message)}}
 function cloudDisconnect(){cloudEnabled=false;cloudSession=null;cloudRevision=null;localStorage.removeItem(cloudSessionKey);cloudStatus='Disconnected — local saving only';cloudRefresh()}
-if(cloudConfig&&cloudSession)cloudConnect();
+// Restore cloud connection silently on launch and when returning to the app.
+// Never auto-upload starter records or overwrite unsynced local edits.
+let cloudLastReconnect=0,cloudReconnecting=false;
+async function cloudReconnectSilently(){
+ if(!cloudConfig||!cloudSession||cloudReconnecting||cloudBusy||cloudConflict)return;
+ if(Date.now()-cloudLastReconnect<15000)return;
+ cloudLastReconnect=Date.now();
+ cloudReconnecting=true;
+ try{await cloudConnect()}finally{cloudReconnecting=false}
+}
+cloudReconnectSilently();
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden && !cloudEnabled)cloudReconnectSilently();
+});
+window.addEventListener('online',()=>{if(!cloudEnabled)cloudReconnectSilently()});
 </script><script id="fish-lock-script">(function(){const gate=document.getElementById('fish-lock');const form=document.getElementById('fish-lock-form');const field=document.getElementById('fish-lock-password');const error=document.getElementById('fish-lock-error');const expected=[69,115,109,101,49,50,51,33];if(sessionStorage.getItem('fishroom-unlocked')==='yes'){gate.remove();return;}document.body.style.overflow='hidden';document.querySelector('main.shell').setAttribute('inert','');document.getElementById('mic').setAttribute('inert','');form.addEventListener('submit',function(e){e.preventDefault();const entered=Array.from(field.value).map(c=>c.charCodeAt(0));if(entered.length===expected.length&&entered.every((x,i)=>x===expected[i])){sessionStorage.setItem('fishroom-unlocked','yes');gate.remove();document.body.style.overflow='';document.querySelector('main.shell').removeAttribute('inert');document.getElementById('mic').removeAttribute('inert');}else{error.textContent='Incorrect password. Try again.';field.value='';field.focus();}});})();</script><script id="fishroom-pwa-register">
 if('serviceWorker' in navigator && location.protocol==='https:'){
  window.addEventListener('load',()=>{
