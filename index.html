@@ -595,7 +595,28 @@ function saveSaleCounts(){
  t.saleCounts=counts;save();render();toast('Species totals saved');
 }
 
-function renderTanks(){let active=db.tanks.filter(t=>t.status==='active').length,planned=db.tanks.filter(t=>t.status==='planned').length;let tiles=db.tanks.map(t=>`<button class="tank" onclick="openTank(${t.id})"><div class="tankhead"><span class="num">Tank ${t.id}</span><span class="tag ${t.status==='planned'?'off':t.status==='empty'?'warn':''}">${t.status==='planned'?'Planned':t.status==='empty'?'Empty':'In use'}</span></div><h3>${esc(t.name)}</h3><div class="sub">${esc(t.litres?t.litres+' litres':'Size not entered')}</div><div class="tank-water fish-tank-art ${t.status==='active'?'':t.status==='empty'?'empty-water':'planned-water'}">${t.status==='active'?fishArtForTank(t):''}</div><p>${esc(Object.entries(t.saleCounts||{}).filter(([k,v])=>Number(v)>0).map(([k,v])=>v+" × "+k).join(", ")||"No saleable fish counts entered")}</p></button>`);return `<div class="metrics"><div class="metric"><b>${db.tanks.length}</b><span>Total tanks</span></div><div class="metric"><b>${active}</b><span>In use</span></div><div class="metric"><b>${planned}</b><span>Not set up</span></div></div>${wcOverview()}<div class="overview-head"><h2>Your tanks</h2>${btn("+ Add tank","addTank()","action")}<p class="hint">Tap any tank to see or update its records. Grouped by tank number, not physical position.</p></div>${Array.from({length:Math.ceil(tiles.length/6)},(_,j)=>j*6).map((i,j)=>`<div class="rack-label">Tanks ${i+1}–${Math.min(i+6,db.tanks.length)}</div><div class="rack"><div class="tank-grid">${tiles.slice(i,i+6).join('')}</div><div class="rack-foot"></div></div>`).join('')}`}
+function tankCardStockSummary(counts,groupSizes){
+ const totals={};
+ for(const [name,quantity] of Object.entries(counts||{})){
+  const n=Number(quantity)||0;if(n<=0)continue;
+  const key=groupSizes?baseSpeciesName(name):name;
+  totals[key]=(totals[key]||0)+n;
+ }
+ const items=Object.entries(totals);
+ return items.length?items.map(([name,qty])=>esc(qty+' × '+name)).join(' · '):'<span class="muted">None recorded</span>';
+}
+function tankCardBreeders(id){
+ const items=(Array.isArray(db.breedingStock)?db.breedingStock:[]).filter(b=>Number(b.tank)===Number(id));
+ return items.length?items.map(b=>{
+  const m=Math.max(0,Number(b.males)||0),f=Math.max(0,Number(b.females)||0);
+  return esc(b.species||'Unknown species')+' ('+m+' ♂, '+f+' ♀)';
+ }).join(' · '):'<span class="muted">None recorded</span>';
+}
+function renderTanks(){let active=db.tanks.filter(t=>t.status==='active').length,planned=db.tanks.filter(t=>t.status==='planned').length;let tiles=db.tanks.map(t=>`<button class="tank" onclick="openTank(${t.id})"><div class="tankhead"><span class="num">Tank ${t.id}</span><span class="tag ${t.status==='planned'?'off':t.status==='empty'?'warn':''}">${t.status==='planned'?'Planned':t.status==='empty'?'Empty':'In use'}</span></div><h3>${esc(t.name)}</h3><div class="sub">${esc(t.litres?t.litres+' litres':'Size not entered')}</div><div class="tank-water fish-tank-art ${t.status==='active'?'':t.status==='empty'?'empty-water':'planned-water'}">${t.status==='active'?fishArtForTank(t):''}</div><div style="padding:10px 12px 14px;text-align:left;font-size:12px;line-height:1.5;border-top:1px solid #e4edf0">
+ <div><strong style="color:#117f93">💷 Saleable</strong><div>${tankCardStockSummary(t.saleCounts,true)}</div></div>
+ <div style="margin-top:8px"><strong style="color:#117f93">🌱 Unsaleable</strong><div>${tankCardStockSummary(t.growingCounts,false)}</div></div>
+ <div style="margin-top:8px"><strong style="color:#117f93">🐠 Breeding pairs / adults</strong><div>${tankCardBreeders(t.id)}</div></div>
+ </div></button>`);return `<div class="metrics"><div class="metric"><b>${db.tanks.length}</b><span>Total tanks</span></div><div class="metric"><b>${active}</b><span>In use</span></div><div class="metric"><b>${planned}</b><span>Not set up</span></div></div>${wcOverview()}<div class="overview-head"><h2>Your tanks</h2>${btn("+ Add tank","addTank()","action")}<p class="hint">Tap any tank to see or update its records. Grouped by tank number, not physical position.</p></div>${Array.from({length:Math.ceil(tiles.length/6)},(_,j)=>j*6).map((i,j)=>`<div class="rack-label">Tanks ${i+1}–${Math.min(i+6,db.tanks.length)}</div><div class="rack"><div class="tank-grid">${tiles.slice(i,i+6).join('')}</div><div class="rack-foot"></div></div>`).join('')}`}
 function addTank(){let id=Math.max(0,...db.tanks.map(t=>t.id))+1;let name=prompt('Name or purpose for new Tank '+id,'Empty');if(name===null)return;db.tanks.push({id,name:name||'Empty',dimensions:'',litres:null,status:'empty',notes:'',saleCounts:{},growingCounts:{}});save();go('tanks');openTank(id)}
 function deleteTank(id){let t=db.tanks.find(t=>t.id===id);if(!t)return;if(!confirm('Delete Tank '+id+'? Its maintenance, breeding, test records and associated breeding-stock groups will also be deleted. Export a backup first.'))return;if(!confirm('Confirm permanent deletion of Tank '+id+' and its records?'))return;db.tanks=db.tanks.filter(t=>t.id!==id);ensureBreedingStock();db.breedingStock=db.breedingStock.filter(x=>Number(x.tank)!==Number(id));for(let k of ['tests','breeding','maintenance'])db[k]=db[k].filter(x=>+x.tank!==id);db.layout?.placements&&delete db.layout.placements[id];if(db.tankPhotos)delete db.tankPhotos[id];save();go('tanks')}
 function ensureTankPhotos(){if(!db.tankPhotos||typeof db.tankPhotos!=='object')db.tankPhotos={}}
