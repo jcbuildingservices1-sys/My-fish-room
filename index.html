@@ -276,7 +276,7 @@ display:grid!important;place-items:center!important;background:#063348!important
 </style><style id="fish-layout-photo-verification-2026">
 .photo-version-label{font-size:11px;font-weight:650;vertical-align:middle;border:1px solid #0dbfc3;color:#aefaff;background:#0c4857;border-radius:12px;padding:4px 7px;margin-left:4px;white-space:nowrap}
 .whole-section .real-layout-fish .fish-real-photo{visibility:visible}
-</style></head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><div class="fish-lock-photo" aria-hidden="true"></div><div class="fish-lock-emblem">🐠</div><h1>My Fish Room</h1><p class="lock-subtitle">Your aquarium management hub</p><p class="lock-features">Tank care · Breeding · Water tests</p><label class="lock-input-label" for="fish-lock-password">Password</label><input id="fish-lock-password" type="password" placeholder="Enter your password" autocomplete="off" required aria-label="Password"><button type="submit">🔓 &nbsp;Unlock Fish Room →</button><p class="lock-error" id="fish-lock-error" role="alert"></p><p class="lock-private">🔒 Your private fish room</p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div><details class="fish-photo-credits"><summary>Photo credits and licences</summary><p>Photographs sourced from Wikimedia Commons. See individual photographers and licence terms: <a href="https://commons.wikimedia.org/wiki/File:Ancistrus_sp._in_aquarium.jpg" target="_blank" rel="noopener noreferrer">Bristlenose photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Pterophyllum_scalare_1.jpg" target="_blank" rel="noopener noreferrer">Angelfish photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Blue_Shrimp.jpg" target="_blank" rel="noopener noreferrer">Blue shrimp photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Andinoacara_pulcher_spec._neonblue.jpg" target="_blank" rel="noopener noreferrer">Blue acara photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Poecilia_sphenops.jpg" target="_blank" rel="noopener noreferrer">Molly photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Andinoacara_pulcher_spec._neonblue_%26_offspring_2.jpg" target="_blank" rel="noopener noreferrer">Blue acara pair photo / licence</a></p></details></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
+</style></head><body><div id="fish-lock"><form class="lock-card" id="fish-lock-form"><div class="fish-lock-photo" aria-hidden="true"></div><div class="fish-lock-emblem">🐠</div><h1>My Fish Room</h1><p class="lock-subtitle">Your aquarium management hub</p><p class="lock-features">Tank care · Breeding · Water tests</p><label class="lock-input-label" id="fish-lock-label" for="fish-lock-password">Password</label><input id="fish-lock-password" type="password" placeholder="Enter your password" autocomplete="off" required aria-label="Fish Room access code"><button id="fish-lock-submit" type="submit">🔓 &nbsp;Unlock Fish Room →</button><button id="fish-lock-option" type="button" style="background:transparent;border:0;color:#b9eff4;text-decoration:underline;font-size:14px;box-shadow:none;margin-top:7px;padding:7px">Set up a PIN</button><p class="lock-error" id="fish-lock-error" role="alert"></p><p class="lock-private">🔒 Your private fish room</p></form></div><main class="shell"><header><div><h1>🐠 My Fish Room</h1><div class="sub">Tank care • Breeding • Water tests</div></div><span class="pill" id="tank-total">18 tanks</span></header><div class="nav" id="nav"></div><div id="view"></div><details class="fish-photo-credits"><summary>Photo credits and licences</summary><p>Photographs sourced from Wikimedia Commons. See individual photographers and licence terms: <a href="https://commons.wikimedia.org/wiki/File:Ancistrus_sp._in_aquarium.jpg" target="_blank" rel="noopener noreferrer">Bristlenose photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Pterophyllum_scalare_1.jpg" target="_blank" rel="noopener noreferrer">Angelfish photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Blue_Shrimp.jpg" target="_blank" rel="noopener noreferrer">Blue shrimp photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Andinoacara_pulcher_spec._neonblue.jpg" target="_blank" rel="noopener noreferrer">Blue acara photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Poecilia_sphenops.jpg" target="_blank" rel="noopener noreferrer">Molly photo / licence</a> · <a href="https://commons.wikimedia.org/wiki/File:Andinoacara_pulcher_spec._neonblue_%26_offspring_2.jpg" target="_blank" rel="noopener noreferrer">Blue acara pair photo / licence</a></p></details></main><button class="floatmic" id="mic" title="Speak an instruction" aria-label="Speak an instruction">🎙️</button><div id="toast" class="toast hidden"></div><script>
 const KEY='myfishroom_v1';const today=()=>new Date().toISOString().slice(0,10);
 const seedTanks=[
 [1,'Grow-out','600 × 600 × 600',216,'active','~170 juvenile common and albino bristlenose plecos (20–70 mm); ~13 baby mollies'],
@@ -903,7 +903,77 @@ document.addEventListener('visibilitychange',()=>{
  if(!document.hidden && !cloudEnabled)cloudReconnectSilently();
 });
 window.addEventListener('online',()=>{if(!cloudEnabled)cloudReconnectSilently()});
-</script><script id="fish-lock-script">(function(){const gate=document.getElementById('fish-lock');const form=document.getElementById('fish-lock-form');const field=document.getElementById('fish-lock-password');const error=document.getElementById('fish-lock-error');const expected=[69,115,109,101,49,50,51,33];if(sessionStorage.getItem('fishroom-unlocked')==='yes'){gate.remove();return;}document.body.style.overflow='hidden';document.querySelector('main.shell').setAttribute('inert','');document.getElementById('mic').setAttribute('inert','');form.addEventListener('submit',function(e){e.preventDefault();const entered=Array.from(field.value).map(c=>c.charCodeAt(0));if(entered.length===expected.length&&entered.every((x,i)=>x===expected[i])){sessionStorage.setItem('fishroom-unlocked','yes');gate.remove();document.body.style.overflow='';document.querySelector('main.shell').removeAttribute('inert');document.getElementById('mic').removeAttribute('inert');}else{error.textContent='Incorrect password. Try again.';field.value='';field.focus();}});})();</script><script id="fishroom-pwa-register">
+</script><script id="fish-lock-script">(function(){
+ const gate=document.getElementById('fish-lock'),form=document.getElementById('fish-lock-form');
+ const field=document.getElementById('fish-lock-password'),error=document.getElementById('fish-lock-error');
+ const label=document.getElementById('fish-lock-label'),submit=document.getElementById('fish-lock-submit'),option=document.getElementById('fish-lock-option');
+ const expected=[69,115,109,101,49,50,51,33];
+ const pinKey='fishroom_local_pin_v1';
+ let mode=localStorage.getItem(pinKey)?'pin':'password';
+ let proposedPin='',lockedUntil=0,failed=0;
+ const hasPin=()=>!!localStorage.getItem(pinKey);
+ const oldPassword=input=>{const a=Array.from(input).map(c=>c.charCodeAt(0));return a.length===expected.length&&a.every((x,i)=>x===expected[i])};
+ async function hashPin(pin,salt){
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new Uint8Array(salt),iterations:120000,hash:'SHA-256'},key,256);
+  return Array.from(new Uint8Array(bits),x=>x.toString(16).padStart(2,'0')).join('');
+ }
+ function setMode(next){
+  mode=next;error.textContent='';field.value='';
+  const numeric=['pin','choose','confirm'].includes(mode);
+  field.setAttribute('inputmode',numeric?'numeric':'text');
+  if(numeric){field.setAttribute('pattern','[0-9]{4,6}');field.setAttribute('maxlength','6')}
+  else {field.removeAttribute('pattern');field.removeAttribute('maxlength')}
+  label.textContent=({pin:'Enter your PIN',password:'Password',verify:'Enter existing password to set your PIN',choose:'Choose a 4–6 digit PIN',confirm:'Confirm your new PIN',recover:'Existing password (PIN recovery)'})[mode];
+  field.placeholder=numeric?'4–6 digit PIN':'Enter your password';
+  submit.textContent=({pin:'🔓 Unlock with PIN',password:'🔓 Unlock Fish Room',verify:'Continue',choose:'Continue',confirm:'Save PIN & Unlock',recover:'Unlock & Reset PIN'})[mode];
+  option.textContent=hasPin()?(mode==='recover'?'Back to PIN':'Forgot PIN? Use password'):(mode==='password'?'Set up a PIN':'Back to password');
+  option.style.display=['choose','confirm'].includes(mode)?'none':'block';
+  field.focus();
+ }
+ function unlock(){
+  sessionStorage.setItem('fishroom-unlocked','yes');gate.remove();
+  document.body.style.overflow='';document.querySelector('main.shell').removeAttribute('inert');document.getElementById('mic').removeAttribute('inert');
+ }
+ if(sessionStorage.getItem('fishroom-unlocked')==='yes'){gate.remove();return}
+ document.body.style.overflow='hidden';document.querySelector('main.shell').setAttribute('inert','');document.getElementById('mic').setAttribute('inert','');
+ option.addEventListener('click',()=>setMode(hasPin()?(mode==='recover'?'pin':'recover'):(mode==='password'?'verify':'password')));
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const value=field.value;field.disabled=true;submit.disabled=true;
+  try{
+   if(Date.now()<lockedUntil){error.textContent='Too many attempts. Please try again shortly.';return}
+   if(mode==='pin'){
+    let record;try{record=JSON.parse(localStorage.getItem(pinKey))}catch{}
+    if(!record||!Array.isArray(record.salt)||!record.hash){setMode('recover');return}
+    if(await hashPin(value,record.salt)===record.hash){failed=0;unlock();return}
+    failed++;if(failed>=5){lockedUntil=Date.now()+30000;failed=0}
+    error.textContent='Incorrect PIN.';field.value='';return;
+   }
+   if(mode==='password'){
+    if(oldPassword(value)){unlock();return}
+    error.textContent='Incorrect password.';field.value='';return;
+   }
+   if(mode==='verify'||mode==='recover'){
+    if(!oldPassword(value)){error.textContent='Incorrect password.';field.value='';return}
+    if(mode==='recover'){localStorage.removeItem(pinKey);unlock();return}
+    setMode('choose');return;
+   }
+   if(mode==='choose'){
+    if(!/^[0-9]{4,6}$/.test(value)){error.textContent='Choose 4 to 6 digits.';return}
+    proposedPin=value;setMode('confirm');return;
+   }
+   if(mode==='confirm'){
+    if(value!==proposedPin){proposedPin='';setMode('choose');error.textContent='PINs did not match. Try again.';return}
+    const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)));
+    localStorage.setItem(pinKey,JSON.stringify({salt,hash:await hashPin(value,salt)}));
+    proposedPin='';unlock();
+   }
+  }catch(err){error.textContent='PIN setup unavailable. Use your existing password.';if(mode!=='pin')setMode('password')}
+  finally{field.disabled=false;submit.disabled=false}
+ });
+ setMode(mode);
+})();</script><script id="fishroom-pwa-register">
 if('serviceWorker' in navigator && location.protocol==='https:'){
  window.addEventListener('load',()=>{
   navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(err=>console.warn('Fish Room install worker unavailable',err));
