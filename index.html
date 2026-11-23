@@ -579,22 +579,33 @@ function transferGrowingStock(){
 
 function saleCountEditor(t){
  const items=currentSpecies();
- return `<div class="panel" style="margin-top:12px"><h3>① Saleable stock — ready to sell</h3><p class="hint">Only fish ready for sale go here. Record younger fish in the separate Unsaleable stock section below, or use Move to saleable. If you previously entered size-specific quantities, they are included in the displayed total without deleting those saved records.</p><div class="grid">${items.map(x=>`<div><label>${esc(x.name)}</label><input aria-label="${esc(x.name)} quantity" type="number" min="0" step="1" inputmode="numeric" data-sale-species="${esc(x.name)}" value="${Object.entries(t.saleCounts||{}).reduce((n,[k,v])=>n+(baseSpeciesName(k)===x.name?Number(v)||0:0),0)}"></div>`).join('')}</div><div class="actions"><button class="action" onclick="saveSaleCounts()">Save stock counts</button><button class="secondary" onclick="addSpecies()">+ Add species</button><button class="secondary" onclick="deleteSpecies()">Delete species</button></div></div>`;
+ return `<div class="panel" style="margin-top:12px"><h3>① Saleable stock — ready to sell</h3><p class="hint">Only fish ready for sale go here. Record younger fish in the separate Unsaleable stock section below, or use Move to saleable. If you previously entered size-specific quantities, they are included in the displayed total without deleting those saved records.</p><div class="grid">${items.map(x=>`<div><label>${esc(x.name)}</label><input aria-label="${esc(x.name)} quantity" type="number" min="0" step="1" inputmode="numeric" data-sale-species="${esc(x.name)}" data-saved-quantity="${Object.entries(t.saleCounts||{}).reduce((n,[k,v])=>n+(baseSpeciesName(k)===x.name?Number(v)||0:0),0)}" value="${Object.entries(t.saleCounts||{}).reduce((n,[k,v])=>n+(baseSpeciesName(k)===x.name?Number(v)||0:0),0)}" onchange="saveSaleSpecies(this)"></div>`).join('')}</div><div class="actions"><button class="action" onclick="saveSaleCounts()">Save stock counts</button><button class="secondary" onclick="addSpecies()">+ Add species</button><button class="secondary" onclick="deleteSpecies()">Delete species</button></div></div>`;
 }
 
 function addSpecies(){let name=prompt('New fish or shrimp species name:');if(name===null)return;name=name.trim().replace(/\s+/g,' ');if(!name){toast('Enter a species name.');return}if(name.length>70){toast('Species name is too long.');return}if(db.stockItems.some(x=>x.name.toLowerCase()===name.toLowerCase())){toast('That species is already listed.');return}db.stockItems.push({name,price:0,qty:0});save();render();toast(name+' added. Set its trade price on Stock Value.');}
 function deleteSpecies(){let name=prompt('Exact species name to delete from the stock list:');if(!name)return;let i=db.stockItems.findIndex(x=>x.name.toLowerCase()===name.trim().toLowerCase());if(i<0){toast('Species not found');return}if(!confirm('Delete '+db.stockItems[i].name+' and its stock counts from ALL tanks? This cannot be undone. Export a backup first.'))return;db.stockItems.splice(i,1);db.tanks.forEach(t=>delete t.saleCounts?.[name]);save();render();toast('Species deleted')}
-function saveSaleCounts(){
+function saveSaleSpecies(input){
  const t=db.tanks.find(x=>x.id===selected);if(!t)return;
+ const quantity=Number(input.value),base=input.dataset.saleSpecies;
+ if(input.value.trim()===''||!Number.isSafeInteger(quantity)||quantity<0){toast('Enter a valid whole-number quantity');return}
+ if(quantity===Number(input.dataset.savedQuantity))return;
  const counts={...(t.saleCounts||{})};
- for(const el of document.querySelectorAll('[data-sale-species]')){
-  const quantity=Number(el.value),base=el.dataset.saleSpecies;
-  if(!Number.isSafeInteger(quantity)||quantity<0){toast('Enter a valid whole-number quantity');return}
-  // Collapse historical sized counts only for this edited species, avoiding double-counting.
-  for(const name of Object.keys(counts))if(baseSpeciesName(name)===base)delete counts[name];
-  if(quantity)counts[base]=quantity;
+ // Keep every other species and breeder entry unchanged; update only the edited species.
+ for(const name of Object.keys(counts))if(baseSpeciesName(name)===base)delete counts[name];
+ if(quantity)counts[base]=quantity;
+ t.saleCounts=counts;
+ save();
+ input.dataset.savedQuantity=String(quantity);
+ toast(base+' updated — '+quantity+' saleable in Tank '+t.id);
+}
+function saveSaleCounts(){
+ const inputs=[...document.querySelectorAll('[data-sale-species]')];
+ for(const input of inputs){
+  const n=Number(input.value);
+  if(input.value.trim()===''||!Number.isSafeInteger(n)||n<0){toast('Enter valid whole-number stock counts');return}
  }
- t.saleCounts=counts;save();render();toast('Species totals saved');
+ inputs.forEach(saveSaleSpecies);
+ render();toast('Saleable stock saved and Stock Value updated');
 }
 
 function tankCardStockSummary(counts,groupSizes){
