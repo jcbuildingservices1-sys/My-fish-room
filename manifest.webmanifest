@@ -1,0 +1,19 @@
+{
+  "name": "My Fish Room",
+  "short_name": "Fish Room",
+  "description": "Private fish room tank, breeding and stock management",
+  "id": "/My-fish-room/",
+  "start_url": "/My-fish-room/",
+  "scope": "/My-fish-room/",
+  "display": "standalone",
+  "background_color": "#eaf6fb",
+  "theme_color": "#117f93",
+  "icons": [
+    {
+      "src": "./fishroom-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
