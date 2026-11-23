@@ -10,10 +10,16 @@
   "theme_color": "#081622",
   "icons": [
     {
+      "src": "./fishroom-iphone-icon-v3.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "./fishroom-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "display_override": [
